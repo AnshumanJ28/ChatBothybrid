@@ -1,9 +1,29 @@
+# Web Framework
 fastapi>=0.116
+
+# ASGI Server
 uvicorn[standard]>=0.35
+
+# Production Server
 gunicorn>=23.0
 
+# Numerical Computing
 numpy>=1.24
+
+# C++ Python Bindings
 pybind11>=2.11
 
+# HTTP Requests
 requests>=2.32
+
+# Environment Variables
 python-dotenv>=1.0
+
+# Optional Embedding Model
+# sentence-transformers>=3.0
+
+# Optional PyTorch
+# torch>=2.0
+
+# Optional Spell Checker
+# symspellpy>=6.7
