@@ -1,6 +1,27 @@
-pybind11>=2.11
+# Web Framework
+Flask>=3.0
+
+# Production WSGI Server
+gunicorn>=23.0
+
+# Numerical Computing
 numpy>=1.24
-# torch is OPTIONAL — only used by python/tests/test_lstm_correctness.py's
-# test_against_torch_if_available() to cross-check against nn.LSTMCell.
-# The primary correctness test uses a numpy reference and needs no torch.
+
+# C++ Python Bindings
+pybind11>=2.11
+
+# HTTP Requests
+requests>=2.32
+
+# Environment Variable Management
+python-dotenv>=1.0
+
+# Optional Embedding Model
+# Uncomment if using Sentence Transformers
+# sentence-transformers>=3.0
+
+# Optional PyTorch (Only if you use it)
 # torch>=2.0
+
+# Optional Spell Checker
+# symspellpy>=6.7
