@@ -13,6 +13,7 @@ RUN mkdir -p python/orchestrator/static && cp index.html python/orchestrator/sta
 
 RUN cd cpp && make
 
+
 WORKDIR /app/python
 EXPOSE 10000
-CMD ["python", "-m", "orchestrator.main"]
+CMD ["python", "-m", "orchestrator.server"]
