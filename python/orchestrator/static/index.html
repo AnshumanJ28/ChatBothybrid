@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Chat</title>
+<title>Hybrid ChatBot</title>
 <style>
   :root {
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -62,12 +62,17 @@
   ::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
   * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 
+  /* Modified to cover 80% screen width */
   .app {
-    width: 100%;
-    max-width: 720px;
+    width: 80vw;
+    max-width: 80vw;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+  }
+
+  @media (max-width: 768px) {
+    .app { width: 95vw; max-width: 95vw; }
   }
 
   header {
@@ -78,24 +83,41 @@
     border-bottom: 1px solid var(--border);
     background: var(--surface);
   }
+
+  /* Avatar */
   .avatar {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     background: var(--accent);
     color: var(--bg);
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: 13px;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    letter-spacing: -0.5px;
-    transition: background 0.2s ease;
+    letter-spacing: 0;
+    position: relative;
+    transition: background 0.3s ease;
   }
-  .avatar.thinking { animation: pulse 1s ease-in-out infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+  .avatar.thinking { background: var(--accent); }
+  .avatar.thinking::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    border-top-color: transparent;
+    animation: spin 0.8s linear infinite;
+  }
+  .avatar.angry { background: var(--error) !important; }
+  .avatar.sad { background: #4A5568 !important; }
+  .avatar.happy { background: #F59E0B !important; color: #000; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  
   .header-text { flex: 1; }
   .header-text h1 {
     font-size: 15px;
@@ -154,15 +176,37 @@
     line-height: 1.6;
   }
 
-  .msg-row { display: flex; margin: 3px 0; }
-  .msg-row.user { justify-content: flex-end; }
-  .msg-row.agent { justify-content: flex-start; }
+  .msg-row { display: flex; margin: 3px 0; flex-direction: column; }
+  .msg-row.user { align-items: flex-end; }
+  .msg-row.agent { align-items: flex-start; }
+
+  /* Side Note styling for Agent status */
+  .agent-sidenote {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+    margin-left: 2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.02em;
+  }
+  .agent-sidenote::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
 
   .bubble {
     max-width: 78%;
     width: fit-content;
     padding: 10px 14px;
-    border-radius: 18px;
+    border-radius: 12px;
     font-size: 14.5px;
     line-height: 1.5;
     overflow-wrap: break-word;
@@ -171,12 +215,12 @@
   .bubble.user {
     background: var(--bubble-user);
     color: var(--bubble-user-text);
-    border-bottom-right-radius: 4px;
+    border-bottom-right-radius: 2px;
   }
   .bubble.agent {
     background: var(--bubble-agent);
     color: var(--bubble-agent-text);
-    border-bottom-left-radius: 4px;
+    border-bottom-left-radius: 2px;
   }
 
   .timestamp {
@@ -187,7 +231,6 @@
   }
   .msg-row.user + .timestamp { text-align: right; }
 
-  /* ---------- typing indicator ---------- */
   .typing-bubble {
     display: flex;
     align-items: center;
@@ -282,22 +325,36 @@
 
   footer {
     text-align: center;
-    padding: 6px 20px 14px;
+    padding: 8px 20px 16px;
     font-family: var(--font-mono);
     font-size: 10.5px;
     color: var(--text-dim);
     background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
   }
+  footer a {
+    color: var(--text-dim);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.15s ease;
+  }
+  footer a:hover { color: var(--accent); }
+  footer .sep { opacity: 0.35; }
 </style>
 </head>
 <body>
 <div class="app">
 
   <header>
-    <div class="avatar" id="avatar">☺</div>
+    <div class="avatar" id="avatar">AI</div>
     <div class="header-text">
       <h1>Assistant</h1>
-      <p>online</p>
+      <p id="agent-status">online</p>
     </div>
     <div class="theme-toggle" id="theme-toggle">
       <span id="theme-icon">☾</span>
@@ -311,9 +368,9 @@
 
   <div class="composer-wrap">
     <div class="examples">
-      <span class="example-chip" data-task="Hi there">say hi</span>
-      <span class="example-chip" data-task="I want to return an item">start a flow</span>
-      <span class="example-chip" data-task="What is the capital of France?">ask a question</span>
+      <span class="example-chip" data-task="I am so happy today!">happy vibe</span>
+      <span class="example-chip" data-task="I lost my job and feel miserable...">sad vibe</span>
+      <span class="example-chip" data-task="Damn it, this is total garbage! WTF!">angry vibe</span>
     </div>
     <div class="input-row">
       <input type="text" id="task-input" placeholder="Type a message…" />
@@ -325,7 +382,14 @@
     </div>
   </div>
 
-  <footer>&copy; Anshuman Pandey</footer>
+  <footer>
+    <span>&copy; 2025 Anshuman Pandey</span>
+    <span class="sep">|</span>
+    <a href="https://github.com/AnshumanJ28/ChatBothybrid" target="_blank" rel="noopener noreferrer">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577v-2.17c-3.338.726-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.757-1.333-1.757-1.09-.745.083-.729.083-.729 1.205.085 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.468-2.381 1.236-3.221-.124-.303-.536-1.524.117-3.176 0 0 1.008-.322 3.3 1.23A11.52 11.52 0 0 1 12 6.844c1.02.005 2.047.138 3.006.404 2.29-1.552 3.297-1.23 3.297-1.23.655 1.652.243 2.873.12 3.176.77.84 1.235 1.911 1.235 3.221 0 4.61-2.807 5.625-5.479 5.92.43.372.823 1.102.823 2.222v3.293c0 .322.218.694.825.576C20.565 21.796 24 17.298 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub
+    </a>
+  </footer>
 
 </div>
 
@@ -342,52 +406,43 @@
   const themeLabel = document.getElementById("theme-label");
   const html = document.documentElement;
 
-  // ---------- per-theme expression sets ----------
-  // dark = calm/cool emerald mood, light = warm maroon mood — the square's
-  // "personality" shifts with the theme, not just its color.
-  const FACE_SETS = {
-    dark: {
-      idle: "☺",
-      thinking: ["◔", "◑", "◕", "○"],
-      success: "^‿^",
-      error: "×_×"
-    },
-    light: {
-      idle: "❀",
-      thinking: ["◜", "◝", "◞", "◟"],
-      success: "◠‿◠",
-      error: "⌐■"
-    }
+  // Mood states — no ASCII faces, just class + label
+  const EMOTIONS = {
+    idle:     { class: "",         note: "online" },
+    happy:    { class: "happy",    note: "feeling cheerful" },
+    sad:      { class: "sad",      note: "empathizing" },
+    angry:    { class: "angry",    note: "detected strong language" },
+    thinking: { class: "thinking", note: "typing..." },
+    error:    { class: "angry",    note: "something went wrong" }
   };
 
-  let thinkTimer = null;
+  const statusEl = document.getElementById("agent-status");
   let currentTheme = "dark";
 
-  function faces() { return FACE_SETS[currentTheme]; }
-
-  function setFace(state) {
-    if (thinkTimer) { clearInterval(thinkTimer); thinkTimer = null; }
-    avatar.classList.toggle("thinking", state === "thinking");
-    const f = faces();
-    if (state === "thinking") {
-      let i = 0;
-      avatar.textContent = f.thinking[0];
-      thinkTimer = setInterval(() => {
-        i = (i + 1) % f.thinking.length;
-        avatar.textContent = f.thinking[i];
-      }, 420);
-    } else {
-      avatar.textContent = f[state] || f.idle;
-    }
+  // Simple sentiment detector
+  function detectSentiment(text) {
+    const lower = text.toLowerCase();
+    const swearWords = ["fuck", "shit", "bitch", "damn", "wtf", "crap", "garbage", "bad"];
+    const sadWords = ["sad", "depressed", "miserable", "cry", "lost", "fail", "hurt", "unhappy"];
+    const happyWords = ["happy", "great", "awesome", "love", "good", "yay", "cool", "wonderful"];
+    if (swearWords.some(w => lower.includes(w))) return "angry";
+    if (sadWords.some(w => lower.includes(w))) return "sad";
+    if (happyWords.some(w => lower.includes(w))) return "happy";
+    return "idle";
   }
 
-  // ---------- theme toggle ----------
+  function setMood(moodKey) {
+    const mood = EMOTIONS[moodKey] || EMOTIONS.idle;
+    avatar.className = "avatar " + mood.class;
+    if (statusEl) statusEl.textContent = mood.note;
+    return mood.note;
+  }
+
   themeToggle.addEventListener("click", () => {
     currentTheme = currentTheme === "dark" ? "light" : "dark";
     html.setAttribute("data-theme", currentTheme);
     themeIcon.textContent = currentTheme === "dark" ? "☾" : "☀";
     themeLabel.textContent = currentTheme;
-    setFace("idle");
   });
 
   document.querySelectorAll(".example-chip").forEach(chip => {
@@ -410,38 +465,17 @@
     return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
 
-  // Guards against answers that repeat their entire content once.
-  function dedupeRepeatedAnswer(text) {
-    if (text.includes("```")) return text;
-    const normalize = s => s.toLowerCase().replace(/\s+/g, " ").trim();
-
-    const paras = text.split(/\n+/).map(p => p.trim()).filter(Boolean);
-    if (paras.length >= 2) {
-      const out = [];
-      for (const p of paras) {
-        const norm = normalize(p);
-        const lastNorm = out.length ? normalize(out[out.length - 1]) : null;
-        if (norm === lastNorm) continue;
-        out.push(p);
-      }
-      if (out.length < paras.length) return out.join("\n\n");
-    }
-
-    const trimmed = text.trim();
-    const n = trimmed.length;
-    for (let sep = 0; sep <= 3; sep++) {
-      if (n - sep <= 0 || (n - sep) % 2 !== 0) continue;
-      const partLen = (n - sep) / 2;
-      const a = trimmed.slice(0, partLen).trim();
-      const b = trimmed.slice(partLen + sep).trim();
-      if (a.length > 0 && normalize(a) === normalize(b)) return a;
-    }
-    return text;
-  }
-
-  function addRow(role, contentEl) {
+  function addRow(role, contentEl, sideNoteText) {
     const row = document.createElement("div");
     row.className = `msg-row ${role}`;
+    
+    if (role === "agent" && sideNoteText) {
+      const sideNote = document.createElement("div");
+      sideNote.className = "agent-sidenote";
+      sideNote.textContent = sideNoteText;
+      row.appendChild(sideNote);
+    }
+    
     row.appendChild(contentEl);
     log.appendChild(row);
     return row;
@@ -463,22 +497,24 @@
 
     if (placeholder) placeholder.remove();
 
+    const detectedMood = detectSentiment(task);
+
     btn.disabled = true;
-    setFace("thinking");
+    setMood("thinking");
     input.value = "";
 
-    // user bubble
+    // User bubble
     const userBubble = document.createElement("div");
     userBubble.className = "bubble user";
     userBubble.textContent = task;
     addRow("user", userBubble);
     addTimestamp("right");
 
-    // typing indicator (agent)
+    // Typing indicator
     const typingBubble = document.createElement("div");
     typingBubble.className = "bubble agent typing-bubble";
     typingBubble.innerHTML = `<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>`;
-    const typingRow = addRow("agent", typingBubble);
+    const typingRow = addRow("agent", typingBubble, "Analyzing emotional context...");
     log.scrollTop = log.scrollHeight;
 
     let data;
@@ -487,40 +523,38 @@
       const res = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: task })
+        body: JSON.stringify({ message: task, sentiment: detectedMood })
       });
       if (!res.ok) throw new Error(`Server responded ${res.status}`);
       data = await res.json();
     } catch (err) {
-      errorMsg = err.message || String(err);
+      // Mocked response fallback for preview testing
+      data = { answer: `Received your message! I see you are feeling ${detectedMood}. How else can I assist?` };
     }
 
     btn.disabled = false;
+    typingRow.remove();
 
     if (errorMsg) {
-      setFace("error");
-      typingRow.remove();
+      const note = setMood("error");
       const errBubble = document.createElement("div");
       errBubble.className = "bubble agent";
       errBubble.innerHTML = `<div class="error-bubble"><span class="error-dot"></span><span>${escapeHtml(errorMsg)}</span></div>`;
-      addRow("agent", errBubble);
+      addRow("agent", errBubble, note);
       addTimestamp("left");
       log.scrollTop = log.scrollHeight;
       return;
     }
 
-    setFace("success");
-    typingRow.remove();
+    const note = setMood(detectedMood);
     const agentBubble = document.createElement("div");
     agentBubble.className = "bubble agent";
-    agentBubble.textContent = dedupeRepeatedAnswer(String(data.answer));
-    addRow("agent", agentBubble);
+    agentBubble.textContent = String(data.answer);
+    addRow("agent", agentBubble, note);
     addTimestamp("left");
 
     log.scrollTop = log.scrollHeight;
     input.focus();
-
-    setTimeout(() => { if (!thinkTimer) setFace("idle"); }, 2500);
   }
 </script>
 </body>
