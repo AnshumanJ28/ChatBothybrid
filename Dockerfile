@@ -13,7 +13,6 @@ RUN mkdir -p python/orchestrator/static && cp index.html python/orchestrator/sta
 
 RUN cd cpp && make
 
-
 WORKDIR /app/python
 EXPOSE 10000
-CMD ["python", "-m", "orchestrator.server"]
+CMD uvicorn orchestrator.server:app --host 0.0.0.0 --port $PORT
