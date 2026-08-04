@@ -1,27 +1,9 @@
-# Web Framework
-Flask>=3.0
-
-# Production WSGI Server
+fastapi>=0.116
+uvicorn[standard]>=0.35
 gunicorn>=23.0
 
-# Numerical Computing
 numpy>=1.24
-
-# C++ Python Bindings
 pybind11>=2.11
 
-# HTTP Requests
 requests>=2.32
-
-# Environment Variable Management
 python-dotenv>=1.0
-
-# Optional Embedding Model
-# Uncomment if using Sentence Transformers
-# sentence-transformers>=3.0
-
-# Optional PyTorch (Only if you use it)
-# torch>=2.0
-
-# Optional Spell Checker
-# symspellpy>=6.7
