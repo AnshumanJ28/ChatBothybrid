@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chat</title>
+<style>
+  :root {
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  /* ---------- DARK THEME (black + emerald + orange) ---------- */
+  html[data-theme="dark"] {
+    --bg: #070907;
+    --surface: #0F1512;
+    --bubble-user: #10B981;
+    --bubble-user-text: #04160E;
+    --bubble-agent: #151C18;
+    --bubble-agent-text: #E7EFE9;
+    --border: #1E2C24;
+    --accent: #10B981;
+    --accent-dim: #0B7A56;
+    --accent-secondary: #F5A623;
+    --text: #E7EFE9;
+    --text-dim: #6E8478;
+    --error: #E0645F;
+  }
+
+  /* ---------- LIGHT THEME (white + maroon) ---------- */
+  html[data-theme="light"] {
+    --bg: #FFFFFF;
+    --surface: #FBF6F6;
+    --bubble-user: #7A1F2B;
+    --bubble-user-text: #FFF7F5;
+    --bubble-agent: #F2E7E7;
+    --bubble-agent-text: #2A1315;
+    --border: #E7D6D6;
+    --accent: #7A1F2B;
+    --accent-dim: #5C1520;
+    --accent-secondary: #B5652F;
+    --text: #2A1315;
+    --text-dim: #9C7C7C;
+    --error: #B5342A;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    display: flex;
+    justify-content: center;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  ::-webkit-scrollbar { width: 7px; height: 7px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+  * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+  /* Modified to cover 80% screen width */
+  .app {
+    width: 80vw;
+    max-width: 80vw;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (max-width: 768px) {
+    .app { width: 95vw; max-width: 95vw; }
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  /* Modified Avatar: Square design */
+  .avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px; /* Square with subtle corners */
+    background: var(--accent);
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: -0.5px;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  .avatar.thinking { animation: pulse 1s ease-in-out infinite; }
+  .avatar.angry { background: var(--error) !important; color: #fff; }
+  .avatar.sad { background: #4A5568 !important; color: #fff; }
+  .avatar.happy { background: #F59E0B !important; color: #000; }
+  
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+  
+  .header-text { flex: 1; }
+  .header-text h1 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text);
+  }
+  .header-text p {
+    font-size: 11.5px;
+    color: var(--accent);
+    margin: 2px 0 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .header-text p::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+  }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 13px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+  main {
+    flex: 1;
+    padding: 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+  }
+
+  .empty-state {
+    margin: auto;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+    max-width: 320px;
+    line-height: 1.6;
+  }
+
+  .msg-row { display: flex; margin: 3px 0; flex-direction: column; }
+  .msg-row.user { align-items: flex-end; }
+  .msg-row.agent { align-items: flex-start; }
+
+  /* Side Note styling for Agent thoughts/mood */
+  .agent-sidenote {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    margin-bottom: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .bubble {
+    max-width: 78%;
+    width: fit-content;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  .bubble.user {
+    background: var(--bubble-user);
+    color: var(--bubble-user-text);
+    border-bottom-right-radius: 2px;
+  }
+  .bubble.agent {
+    background: var(--bubble-agent);
+    color: var(--bubble-agent-text);
+    border-bottom-left-radius: 2px;
+  }
+
+  .timestamp {
+    font-size: 10.5px;
+    color: var(--text-dim);
+    margin: 3px 4px 10px;
+    font-family: var(--font-mono);
+  }
+  .msg-row.user + .timestamp { text-align: right; }
+
+  .typing-bubble {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 13px 16px;
+  }
+  .typing-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  .error-bubble {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--error);
+    font-size: 13.5px;
+  }
+  .error-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--error); flex-shrink: 0; }
+
+  .composer-wrap {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    padding: 12px 20px 16px;
+  }
+
+  .examples { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .example-chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 11px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+  }
+  .example-chip:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 6px 6px 6px 18px;
+  }
+  .input-row:focus-within { border-color: var(--accent-dim); }
+
+  input[type="text"] {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    padding: 10px 0;
+    outline: none;
+  }
+  input[type="text"]::placeholder { color: var(--text-dim); }
+
+  button.send-btn {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+  button.send-btn:active { transform: scale(0.92); }
+  button.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.send-btn svg { width: 17px; height: 17px; }
+
+  footer {
+    text-align: center;
+    padding: 6px 20px 14px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-dim);
+    background: var(--bg);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="avatar" id="avatar">■_■</div>
+    <div class="header-text">
+      <h1>Assistant</h1>
+      <p>online</p>
+    </div>
+    <div class="theme-toggle" id="theme-toggle">
+      <span id="theme-icon">☾</span>
+      <span id="theme-label">dark</span>
+    </div>
+  </header>
+
+  <main id="log">
+    <p class="empty-state" id="placeholder">Say hi to start the conversation.</p>
+  </main>
+
+  <div class="composer-wrap">
+    <div class="examples">
+      <span class="example-chip" data-task="I am so happy today!">happy vibe</span>
+      <span class="example-chip" data-task="I lost my job and feel miserable...">sad vibe</span>
+      <span class="example-chip" data-task="Damn it, this is total garbage! WTF!">angry vibe</span>
+    </div>
+    <div class="input-row">
+      <input type="text" id="task-input" placeholder="Type a message…" />
+      <button class="send-btn" id="run-btn" aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 11.5L21 3L13 21L11 13L3 11.5Z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <footer>&copy; Anshuman Pandey</footer>
+
+</div>
+
+<script>
+  const API_URL = "";
+
+  const input = document.getElementById("task-input");
+  const btn = document.getElementById("run-btn");
+  const log = document.getElementById("log");
+  const placeholder = document.getElementById("placeholder");
+  const avatar = document.getElementById("avatar");
+  const themeToggle = document.getElementById("theme-toggle");
+  const themeIcon = document.getElementById("theme-icon");
+  const themeLabel = document.getElementById("theme-label");
+  const html = document.documentElement;
+
+  // Dynamic emotional face presets
+  const EMOTIONS = {
+    idle: { face: "■_■", class: "", note: "Agent is listening..." },
+    happy: { face: "^‿^", class: "happy", note: "Agent feels cheerful!" },
+    sad: { face: "T_T", class: "sad", note: "Agent sympathizes with you..." },
+    angry: { face: "█▀█", class: "angry", note: "Agent is annoyed by the language!" },
+    thinking: { face: "◔_◔", class: "thinking", note: "Agent is processing..." },
+    error: { face: "×_×", class: "angry", note: "An error occurred." }
+  };
+
+  let thinkTimer = null;
+  let currentTheme = "dark";
+
+  // Simple sentiment detector for demo responsiveness
+  function detectSentiment(text) {
+    const lower = text.toLowerCase();
+    const swearWords = ["fuck", "shit", "bitch", "damn", "wtf", "crap", "garbage", "bad"];
+    const sadWords = ["sad", "depressed", "miserable", "cry", "lost", "fail", "hurt", "unhappy"];
+    const happyWords = ["happy", "great", "awesome", "love", "good", "yay", "cool", "wonderful"];
+
+    if (swearWords.some(w => lower.includes(w))) return "angry";
+    if (sadWords.some(w => lower.includes(w))) return "sad";
+    if (happyWords.some(w => lower.includes(w))) return "happy";
+    return "idle";
+  }
+
+  function setMood(moodKey) {
+    if (thinkTimer) { clearInterval(thinkTimer); thinkTimer = null; }
+    
+    const mood = EMOTIONS[moodKey] || EMOTIONS.idle;
+    avatar.className = "avatar " + mood.class;
+    
+    if (moodKey === "thinking") {
+      const frames = ["◔_◔", "◑_◑", "◕_◕", "○_○"];
+      let i = 0;
+      avatar.textContent = frames[0];
+      thinkTimer = setInterval(() => {
+        i = (i + 1) % frames.length;
+        avatar.textContent = frames[i];
+      }, 300);
+    } else {
+      avatar.textContent = mood.face;
+    }
+    return mood.note;
+  }
+
+  themeToggle.addEventListener("click", () => {
+    currentTheme = currentTheme === "dark" ? "light" : "dark";
+    html.setAttribute("data-theme", currentTheme);
+    themeIcon.textContent = currentTheme === "dark" ? "☾" : "☀";
+    themeLabel.textContent = currentTheme;
+  });
+
+  document.querySelectorAll(".example-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      input.value = chip.dataset.task;
+      input.focus();
+    });
+  });
+
+  btn.addEventListener("click", runTask);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") runTask(); });
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function nowTime() {
+    return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function addRow(role, contentEl, sideNoteText) {
+    const row = document.createElement("div");
+    row.className = `msg-row ${role}`;
+    
+    if (role === "agent" && sideNoteText) {
+      const sideNote = document.createElement("div");
+      sideNote.className = "agent-sidenote";
+      sideNote.innerHTML = `<span>💬</span> <span>${escapeHtml(sideNoteText)}</span>`;
+      row.appendChild(sideNote);
+    }
+    
+    row.appendChild(contentEl);
+    log.appendChild(row);
+    return row;
+  }
+
+  function addTimestamp(align) {
+    const ts = document.createElement("div");
+    ts.className = "timestamp";
+    ts.style.textAlign = align;
+    ts.style.marginLeft = align === "right" ? "auto" : "4px";
+    ts.style.width = "fit-content";
+    ts.textContent = nowTime();
+    log.appendChild(ts);
+  }
+
+  async function runTask() {
+    const task = input.value.trim();
+    if (!task) return;
+
+    if (placeholder) placeholder.remove();
+
+    const detectedMood = detectSentiment(task);
+
+    btn.disabled = true;
+    setMood("thinking");
+    input.value = "";
+
+    // User bubble
+    const userBubble = document.createElement("div");
+    userBubble.className = "bubble user";
+    userBubble.textContent = task;
+    addRow("user", userBubble);
+    addTimestamp("right");
+
+    // Typing indicator
+    const typingBubble = document.createElement("div");
+    typingBubble.className = "bubble agent typing-bubble";
+    typingBubble.innerHTML = `<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>`;
+    const typingRow = addRow("agent", typingBubble, "Analyzing emotional context...");
+    log.scrollTop = log.scrollHeight;
+
+    let data;
+    let errorMsg = null;
+    try {
+      const res = await fetch(`${API_URL}/api/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: task, sentiment: detectedMood })
+      });
+      if (!res.ok) throw new Error(`Server responded ${res.status}`);
+      data = await res.json();
+    } catch (err) {
+      // Mocked response fallback for preview testing
+      data = { answer: `Received your message! I see you are feeling ${detectedMood}. How else can I assist?` };
+    }
+
+    btn.disabled = false;
+    typingRow.remove();
+
+    if (errorMsg) {
+      const note = setMood("error");
+      const errBubble = document.createElement("div");
+      errBubble.className = "bubble agent";
+      errBubble.innerHTML = `<div class="error-bubble"><span class="error-dot"></span><span>${escapeHtml(errorMsg)}</span></div>`;
+      addRow("agent", errBubble, note);
+      addTimestamp("left");
+      log.scrollTop = log.scrollHeight;
+      return;
+    }
+
+    const note = setMood(detectedMood);
+    const agentBubble = document.createElement("div");
+    agentBubble.className = "bubble agent";
+    agentBubble.textContent = String(data.answer);
+    addRow("agent", agentBubble, note);
+    addTimestamp("left");
+
+    log.scrollTop = log.scrollHeight;
+    input.focus();
+  }
+</script>
+</body>
+</html>

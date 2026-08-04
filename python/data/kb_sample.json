@@ -1,0 +1,72 @@
+[
+  {
+    "id": "kb_001",
+    "category": "billing",
+    "question": "how do I reset my password",
+    "answer": "Go to Settings > Security > Reset Password, then follow the emailed link.",
+    "child_answer": "Tap the little gear settings icon, click on your profile name, and tap 'Reset Password'. Ask an adult to check their email for the magic link!"
+  },
+  {
+    "id": "kb_002",
+    "category": "billing",
+    "question": "how do I update my payment method",
+    "answer": "Go to Settings > Billing > Payment Methods to add or update a card.",
+    "child_answer": "Ask a parent to go to Settings, tap Billing, and update their credit card details."
+  },
+  {
+    "id": "kb_003",
+    "category": "billing",
+    "question": "how do I cancel my subscription",
+    "answer": "Go to Settings > Billing > Manage Plan and select Cancel Subscription.",
+    "child_answer": "Go to Settings, tap Billing, click on Manage Plan, and click Cancel to stop the subscription."
+  },
+  {
+    "id": "kb_004",
+    "category": "account",
+    "question": "how do I change my email address",
+    "answer": "Go to Settings > Account > Email, enter the new address, and confirm via the verification email.",
+    "child_answer": "Go to Settings, tap Account, enter the new email address, and tap the link sent to your inbox to verify it!"
+  },
+  {
+    "id": "kb_005",
+    "category": "account",
+    "question": "how do I delete my account",
+    "answer": "Go to Settings > Account > Delete Account. This is permanent and cannot be undone.",
+    "child_answer": "Go to Settings, tap Account, and click Delete. Warning: this deletes your game/account forever!"
+  },
+  {
+    "id": "kb_006",
+    "category": "technical",
+    "question": "the app keeps crashing on startup",
+    "answer": "Try clearing the app cache, or reinstalling the latest version from the store.",
+    "child_answer": "Try closing and reopening the app, clearing its memory, or asking a parent to reinstall it from the app store!"
+  },
+  {
+    "id": "kb_007",
+    "category": "technical",
+    "question": "I cannot log in to my account",
+    "answer": "Double check your credentials, then try Settings > Security > Reset Password if the issue persists.",
+    "child_answer": "Make sure you typed your username and password correctly. If not, tap Reset Password to get back in!"
+  },
+  {
+    "id": "kb_008",
+    "category": "shipping",
+    "question": "where is my order",
+    "answer": "Track your order under Orders > Order History > Track Package.",
+    "child_answer": "Go to Orders, tap Order History, and click Track Package to see exactly where your toy is on the map!"
+  },
+  {
+    "id": "kb_009",
+    "category": "shipping",
+    "question": "how long does shipping take",
+    "answer": "Standard shipping takes 3-5 business days; express shipping takes 1-2 business days.",
+    "child_answer": "Standard shipping takes 3-5 days (almost a whole week!). Super fast express takes only 1-2 days!"
+  },
+  {
+    "id": "kb_010",
+    "category": "returns",
+    "question": "how do I return an item",
+    "answer": "Go to Orders > Order History > Return Item and follow the prompts to print a return label.",
+    "child_answer": "Go to Orders, tap Return Item, print the sticky label, put the toy back in the box, tape it, and give it to the postman!"
+  }
+]

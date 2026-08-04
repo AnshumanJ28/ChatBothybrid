@@ -1,0 +1,6 @@
+pybind11>=2.11
+numpy>=1.24
+# torch is OPTIONAL — only used by python/tests/test_lstm_correctness.py's
+# test_against_torch_if_available() to cross-check against nn.LSTMCell.
+# The primary correctness test uses a numpy reference and needs no torch.
+# torch>=2.0
