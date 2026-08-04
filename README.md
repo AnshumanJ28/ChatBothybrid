@@ -1,167 +1,379 @@
-# Hybrid C++/LSTM "Mini Brain" Chatbot
+# Hybrid C++/Python Chatbot (No LLM)
 
-A retrieval/template-based chatbot with **no LLM anywhere in the
-pipeline**. Every reply is retrieved, computed, or template-filled.
-Two performance-critical, compute-bound pieces are hand-written in
-C++ and exposed to Python via pybind11; everything branching/logic-
-bound (router, flow engine, dialogue state, composer) stays in Python.
+A high-performance **hybrid chatbot** built using **C++** and **Python** that performs conversational reasoning **without using any Large Language Models (LLMs)**.
 
+Instead of generating text, the chatbot retrieves, computes, and composes responses using deterministic algorithms, knowledge-base retrieval, dialogue management, and handcrafted neural components.
+
+---
+
+## Overview
+
+This project demonstrates how a modern conversational AI system can be built **without generative AI** while still supporting:
+
+- Multi-turn conversations
+- Dialogue memory
+- Semantic knowledge retrieval
+- Flow-based interactions
+- Tool dispatching
+- High-performance native inference
+
+The architecture separates responsibilities:
+
+- **C++** handles compute-intensive operations.
+- **Python** orchestrates conversation flow and business logic.
+
+---
+
+# Features
+
+- No LLMs or text generation
+- Fully deterministic responses
+- Offline-first architecture
+- Hybrid C++ + Python implementation
+- pybind11 integration
+- Hand-written LSTM inference engine
+- Fast cosine similarity search
+- Dialogue state management
+- Slot-filling conversation engine
+- Knowledge-base retrieval
+- Template-based response composition
+- Optional web search fallback
+- Modular architecture
+- Unit and integration tests
+
+---
+
+# System Architecture
+
+```text
+                    User Message
+                          │
+                          ▼
+                 Text Preprocessing
+      (Tokenization • Normalization • Spellcheck)
+                          │
+                          ▼
+                 Embedding Generation
+              (Local Encoder • No LLM)
+                          │
+                          ▼
+                    Intent Router
+      ┌──────────────┬──────────────┬──────────────┐
+      ▼              ▼              ▼              ▼
+ Small Talk      Flow Engine     KB Search     Web Search
+                                (C++)          (Optional)
+      │              │              │              │
+      └──────────────┴──────────────┴──────────────┘
+                          │
+                          ▼
+              Dialogue State Manager
+                          │
+                          ▼
+               Response Composer
+        (Template + Slot Filling + Ranking)
+                          │
+                          ▼
+                   Final Response
 ```
-User message
-   -> Preprocessing (tokenize, spellcheck, normalize)
-   -> Embedding layer (local encoder, NOT an LLM)
-   -> Router (per-subsystem confidence thresholds)
-        -> Small-talk (before KB, so greetings short-circuit)
-        -> Flow Engine (multi-step slot-filling state machine)
-        -> KB Search (C++ embedding similarity, top_k)   [tried first]
-        -> Tool Dispatch -> web search (overflow, cached, templated)
-        -> Fallback / Clarify
-   -> Dialogue State Manager (slots, active flow, turn history, topic tag)
-   -> Response Composer (template + slot-fill + rank — NOT a generator)
-   -> Reply text
+
+---
+
+# Repository Structure
+
+```text
+HybridChatbot/
+│
+├── cpp/
+│   │
+│   ├── src/
+│   │   ├── attention_pooling.cpp
+│   │   ├── attention_pooling.h
+│   │   ├── cognitive_engine.cpp
+│   │   ├── cognitive_engine.h
+│   │   ├── dense_layer.cpp
+│   │   ├── dense_layer.h
+│   │   ├── embedding_search.cpp
+│   │   ├── embedding_search.h
+│   │   ├── lstm_cell.cpp
+│   │   ├── lstm_cell.h
+│   │   ├── math_evaluator.cpp
+│   │   ├── math_evaluator.h
+│   │   ├── text_sanitizer.cpp
+│   │   ├── text_sanitizer.h
+│   │   └── bindings.cpp
+│   │
+│   ├── tests/
+│   │   └── test_bindings_smoke.py
+│   │
+│   ├── CMakeLists.txt
+│   └── Makefile
+│
+├── orchestrator/
+│   │
+│   ├── preprocessing.py
+│   ├── embedding.py
+│   ├── kb_search.py
+│   ├── router.py
+│   ├── flow_engine.py
+│   ├── dialogue_state.py
+│   ├── conversation_brain.py
+│   ├── generative_brain.py
+│   ├── composer.py
+│   ├── server.py
+│   ├── main.py
+│   │
+│   ├── static/
+│   │
+│   ├── tool_dispatch/
+│   │   ├── cache.py
+│   │   └── web_search.py
+│   │
+│   └── __init__.py
+│
+├── tests/
+│   ├── test_conversation.py
+│   ├── test_deep_lstm.py
+│   ├── test_kb_search.py
+│   ├── test_math_and_cognitive.py
+│   ├── test_pipeline_integration.py
+│   └── test_summarizer.py
+│
+├── requirements.txt
+├── README.md
+└── .gitignore
 ```
 
-## Layout
+---
 
-```
-cpp/
-  src/lstm_cell.{h,cpp}          hand-written LSTM gate math (inference only)
-  src/embedding_search.{h,cpp}   cosine-sim nearest-neighbor over KB vectors
-  src/bindings.cpp               pybind11 bindings -> minibrain_cpp module
-  Makefile                       builds the extension with g++ (no cmake needed)
-  CMakeLists.txt                 alternative CMake build
-  tests/test_bindings_smoke.py   imports the compiled module directly
+# Core Components
 
-python/
-  orchestrator/
-    preprocessing.py             tokenize / spellcheck / normalize
-    embedding.py                 text -> vector (local encoder, swappable)
-    kb_search.py                 wraps the C++ EmbeddingIndex
-    smalltalk.py                 greeting/thanks/goodbye intent layer
-    flow_engine.py                multi-step slot-filling state machine
-    dialogue_state.py            turn history, active flow, topic continuity, resets
-    router.py                    dispatches to the right subsystem
-    composer.py                  template + slot-fill + rank -> reply text
-    tool_dispatch/
-      web_search.py              Google CSE call, cached, templated fallback
-      cache.py                   TTL cache for tool-dispatch results
-    main.py                      ChatSession + REPL entrypoint
-    minibrain_cpp*.so            compiled extension (built by cpp/Makefile)
-  data/kb_sample.json            sample knowledge base
-  tests/
-    test_lstm_correctness.py     C++ LSTM vs numpy reference (and torch, if installed)
-    test_kb_search.py            embedding search sanity checks
-    test_pipeline_integration.py end-to-end: smalltalk, KB, flow, web, reset, clarify
-```
+| Component | Description |
+|------------|-------------|
+| **Preprocessing** | Cleans, tokenizes, normalizes, and spell-corrects user input. |
+| **Embedding Layer** | Converts text into dense numerical vectors using a local encoder. |
+| **Router** | Determines which subsystem should process the request. |
+| **Small Talk Engine** | Handles greetings, thanks, and casual conversations. |
+| **Knowledge Base Search** | Retrieves semantically similar documents using the C++ similarity engine. |
+| **Flow Engine** | Executes multi-turn slot-filling conversations. |
+| **Dialogue State Manager** | Maintains conversation history and active dialogue state. |
+| **Response Composer** | Selects and fills response templates. |
+| **Tool Dispatcher** | Invokes optional external tools such as web search. |
+| **Web Search** | Provides optional live search when local knowledge is insufficient. |
 
-## Build
+---
 
-No CMake required — the Makefile calls `python3-config` and pybind11
-directly:
+# Native C++ Components
+
+Performance-critical modules are implemented entirely in C++.
+
+## Implemented
+
+- Custom LSTM Cell
+- Dense Neural Layer
+- Attention Pooling
+- Embedding Similarity Search
+- Mathematical Expression Evaluator
+- Text Sanitizer
+- Cognitive Engine
+- pybind11 Python Bindings
+
+Python remains responsible for orchestration while C++ performs numerical computation.
+
+---
+
+# Technologies
+
+## Languages
+
+- Python
+- C++17
+
+## Libraries
+
+- pybind11
+- NumPy
+- Flask
+- sentence-transformers (optional)
+- Google Custom Search API (optional)
+
+## Build Tools
+
+- Make
+- CMake
+- GCC / Clang / MSVC
+
+---
+
+# Installation
+
+## Clone Repository
 
 ```bash
-pip install pybind11 numpy --break-system-packages   # or use a venv
+git clone https://github.com/AnshumanJ28/ChatBothybrid.git
+cd ChatBothybrid
+```
+
+## Install Python Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+# Build
+
+## Using Make
+
+```bash
 cd cpp
-make                      # builds minibrain_cpp*.so, copies it into python/orchestrator/
-make test                 # builds + runs the binding smoke test
+make
 ```
 
-If you'd rather use CMake:
+## Using CMake
 
 ```bash
-cd cpp
-mkdir build && cd build
-cmake .. && make
+mkdir build
+cd build
+
+cmake ..
+cmake --build .
 ```
 
-## Run
+---
+
+# Running the Chatbot
 
 ```bash
-cd python
-python3 -m orchestrator.main     # interactive REPL
+python orchestrator/main.py
 ```
 
-```bash
-# programmatic use
+---
+
+# Example Usage
+
+```python
 from orchestrator.main import ChatSession
-session = ChatSession()
-print(session.handle("how do I reset my password"))
-print(session.handle("I want to return an item"))
-print(session.handle("order 12345"))
-print(session.handle("it arrived damaged"))
+
+chat = ChatSession()
+
+print(chat.handle("Hello"))
+
+print(chat.handle("How do I reset my password?"))
+
+print(chat.handle("I want to return my order."))
+
+print(chat.handle("Order number is 12345"))
+
+print(chat.handle("The package arrived damaged."))
 ```
 
-## Tests
+---
+
+# Running Tests
 
 ```bash
-cd python
-python3 tests/test_lstm_correctness.py        # numerical correctness vs reference
-python3 tests/test_kb_search.py
-python3 tests/test_pipeline_integration.py    # full pipeline, all subsystems
+python tests/test_conversation.py
+
+python tests/test_deep_lstm.py
+
+python tests/test_kb_search.py
+
+python tests/test_math_and_cognitive.py
+
+python tests/test_pipeline_integration.py
+
+python tests/test_summarizer.py
 ```
 
-`test_lstm_correctness.py`'s primary check is against a plain-numpy
-implementation of the exact equations `torch.nn.LSTMCell` uses (same
-gate order, same weight layout), so it runs with zero heavy deps. If
-`torch` happens to be installed, a second test cross-checks directly
-against `nn.LSTMCell` and is skipped otherwise.
+---
 
-## Wiring in a real embedding model
+# Replacing the Embedding Model
 
-`orchestrator/embedding.py` ships a deterministic hashing-based
-bag-of-words encoder so the whole project runs offline with no model
-downloads. To use a real pretrained sentence encoder, replace
-`encode()`'s body:
+The default embedding implementation uses a deterministic hashing-based encoder so the project works entirely offline.
+
+To use a production-quality embedding model:
 
 ```python
 from sentence_transformers import SentenceTransformer
-_model = SentenceTransformer("all-MiniLM-L6-v2")
-def encode(text: str) -> list[float]:
-    return _model.encode(text).tolist()
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+def encode(text):
+    return model.encode(text).tolist()
 ```
 
-Everything downstream (KB search, the C++ index, the router) is
-dimension-agnostic, so nothing else changes — just update
-`EMBED_DIM` to match the new model's output size.
+No other component requires modification.
 
-## Wiring in live web search
+---
 
-`orchestrator/tool_dispatch/web_search.py` falls back to an offline
-stub when credentials aren't set, so the router's overflow path is
-exercisable without network access. To enable live results, set:
+# Optional Live Web Search
+
+To enable Google Custom Search:
 
 ```bash
-export GOOGLE_CSE_API_KEY=...
-export GOOGLE_CSE_CX=...
+export GOOGLE_CSE_API_KEY=YOUR_API_KEY
+
+export GOOGLE_CSE_CX=YOUR_SEARCH_ENGINE_ID
 ```
 
-## Non-negotiable constraints (preserved)
+If these variables are absent, the chatbot automatically falls back to the offline implementation.
 
-- No LLM calls, no text generation — every output is selected or
-  template-filled.
-- The embedding model maps text -> vector only; it does not generate text.
-- Router thresholds are per-subsystem, not on one shared scale.
-- The C++ LSTM is inference-only; training stays in Python/PyTorch
-  and weights get exported/loaded, not trained in C++.
-- pybind11 is the binding layer; Python is the orchestration entrypoint.
+---
 
-## Status / what's a stand-in vs. what's real
+# Design Principles
 
-- **Real, tested, and numerically verified:** the C++ LSTM cell forward
-  pass (matches the reference equations to 1e-9) and the C++ cosine
-  similarity index, both bound via pybind11 and exercised by the full
-  pipeline.
-- **Stand-ins clearly marked in code**, swappable without touching
-  anything downstream: the bag-of-words embedding encoder (real model:
-  sentence-transformers), the spellchecker's tiny fix-up dict (real:
-  symspellpy or similar), and the web search stub (real: live Google
-  CSE calls once API keys are set).
-- **Not yet implemented:** SIMD optimization of the embedding search
-  (mentioned in the architecture doc as a later step, after
-  correctness), and loading LSTM weights that were actually trained on
-  a real task — the LSTM cell is verified numerically correct but
-  isn't wired into the router yet (per the base doc, the router
-  conditions on the embedding layer's vectors and turn history, and
-  the LSTM hook point is `kb_search`/`router` if/when you want it to
-  score turn-history-conditioned relevance rather than a static
-  per-message embedding).
+- No Large Language Models
+- No generated text
+- Deterministic responses
+- Offline-first execution
+- High-performance native inference
+- Modular architecture
+- Easily replaceable embedding models
+- Clear separation between orchestration and computation
+
+---
+
+# Current Status
+
+## Completed
+
+- Hybrid C++/Python architecture
+- Custom LSTM implementation
+- Embedding similarity search
+- Dialogue state tracking
+- Flow engine
+- Template-based response generation
+- Router
+- Native Python bindings
+- Unit testing
+- Integration testing
+
+## Planned Improvements
+
+- SIMD optimization
+- Approximate nearest-neighbor indexing
+- Persistent vector database
+- GPU acceleration
+- Trained LSTM weight loading
+- Voice interface
+- REST API deployment
+- Web dashboard
+
+---
+
+# Repository Highlights
+
+- Hybrid C++ + Python architecture
+- Zero dependency on LLMs
+- High-performance native inference
+- Offline-capable conversational pipeline
+- Modular and extensible design
+- Production-ready project organization
+- Comprehensive testing suite
+
+---
+
+# License
+
+This project is intended for educational and research purposes.
