@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Chat</title>
+<title>Hybrid ChatBot</title>
 <style>
   :root {
     --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -84,29 +84,39 @@
     background: var(--surface);
   }
 
-  /* Modified Avatar: Square design */
+  /* Avatar */
   .avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 8px; /* Square with subtle corners */
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     background: var(--accent);
     color: var(--bg);
-    font-family: var(--font-mono);
-    font-size: 14px;
+    font-family: var(--font-sans);
+    font-size: 13px;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    letter-spacing: -0.5px;
-    transition: background 0.3s ease, transform 0.2s ease;
+    letter-spacing: 0;
+    position: relative;
+    transition: background 0.3s ease;
   }
-  .avatar.thinking { animation: pulse 1s ease-in-out infinite; }
-  .avatar.angry { background: var(--error) !important; color: #fff; }
-  .avatar.sad { background: #4A5568 !important; color: #fff; }
+  .avatar.thinking { background: var(--accent); }
+  .avatar.thinking::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    border-top-color: transparent;
+    animation: spin 0.8s linear infinite;
+  }
+  .avatar.angry { background: var(--error) !important; }
+  .avatar.sad { background: #4A5568 !important; }
   .avatar.happy { background: #F59E0B !important; color: #000; }
-  
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
   
   .header-text { flex: 1; }
   .header-text h1 {
@@ -170,19 +180,26 @@
   .msg-row.user { align-items: flex-end; }
   .msg-row.agent { align-items: flex-start; }
 
-  /* Side Note styling for Agent thoughts/mood */
+  /* Side Note styling for Agent status */
   .agent-sidenote {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 10.5px;
     color: var(--text-dim);
-    background: var(--surface);
-    border: 1px dashed var(--border);
-    border-radius: 6px;
-    padding: 4px 8px;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
+    margin-left: 2px;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    letter-spacing: 0.02em;
+  }
+  .agent-sidenote::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    flex-shrink: 0;
+    opacity: 0.7;
   }
 
   .bubble {
@@ -308,22 +325,36 @@
 
   footer {
     text-align: center;
-    padding: 6px 20px 14px;
+    padding: 8px 20px 16px;
     font-family: var(--font-mono);
     font-size: 10.5px;
     color: var(--text-dim);
     background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
   }
+  footer a {
+    color: var(--text-dim);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.15s ease;
+  }
+  footer a:hover { color: var(--accent); }
+  footer .sep { opacity: 0.35; }
 </style>
 </head>
 <body>
 <div class="app">
 
   <header>
-    <div class="avatar" id="avatar">■_■</div>
+    <div class="avatar" id="avatar">AI</div>
     <div class="header-text">
       <h1>Assistant</h1>
-      <p>online</p>
+      <p id="agent-status">online</p>
     </div>
     <div class="theme-toggle" id="theme-toggle">
       <span id="theme-icon">☾</span>
@@ -351,7 +382,14 @@
     </div>
   </div>
 
-  <footer>&copy; Anshuman Pandey</footer>
+  <footer>
+    <span>&copy; 2025 Anshuman Pandey</span>
+    <span class="sep">|</span>
+    <a href="https://github.com/AnshumanJ28/ChatBothybrid" target="_blank" rel="noopener noreferrer">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577v-2.17c-3.338.726-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.757-1.333-1.757-1.09-.745.083-.729.083-.729 1.205.085 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.468-2.381 1.236-3.221-.124-.303-.536-1.524.117-3.176 0 0 1.008-.322 3.3 1.23A11.52 11.52 0 0 1 12 6.844c1.02.005 2.047.138 3.006.404 2.29-1.552 3.297-1.23 3.297-1.23.655 1.652.243 2.873.12 3.176.77.84 1.235 1.911 1.235 3.221 0 4.61-2.807 5.625-5.479 5.92.43.372.823 1.102.823 2.222v3.293c0 .322.218.694.825.576C20.565 21.796 24 17.298 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub
+    </a>
+  </footer>
 
 </div>
 
@@ -368,26 +406,25 @@
   const themeLabel = document.getElementById("theme-label");
   const html = document.documentElement;
 
-  // Dynamic emotional face presets
+  // Mood states — no ASCII faces, just class + label
   const EMOTIONS = {
-    idle: { face: "■_■", class: "", note: "Agent is listening..." },
-    happy: { face: "^‿^", class: "happy", note: "Agent feels cheerful!" },
-    sad: { face: "T_T", class: "sad", note: "Agent sympathizes with you..." },
-    angry: { face: "█▀█", class: "angry", note: "Agent is annoyed by the language!" },
-    thinking: { face: "◔_◔", class: "thinking", note: "Agent is processing..." },
-    error: { face: "×_×", class: "angry", note: "An error occurred." }
+    idle:     { class: "",         note: "online" },
+    happy:    { class: "happy",    note: "feeling cheerful" },
+    sad:      { class: "sad",      note: "empathizing" },
+    angry:    { class: "angry",    note: "detected strong language" },
+    thinking: { class: "thinking", note: "typing..." },
+    error:    { class: "angry",    note: "something went wrong" }
   };
 
-  let thinkTimer = null;
+  const statusEl = document.getElementById("agent-status");
   let currentTheme = "dark";
 
-  // Simple sentiment detector for demo responsiveness
+  // Simple sentiment detector
   function detectSentiment(text) {
     const lower = text.toLowerCase();
     const swearWords = ["fuck", "shit", "bitch", "damn", "wtf", "crap", "garbage", "bad"];
     const sadWords = ["sad", "depressed", "miserable", "cry", "lost", "fail", "hurt", "unhappy"];
     const happyWords = ["happy", "great", "awesome", "love", "good", "yay", "cool", "wonderful"];
-
     if (swearWords.some(w => lower.includes(w))) return "angry";
     if (sadWords.some(w => lower.includes(w))) return "sad";
     if (happyWords.some(w => lower.includes(w))) return "happy";
@@ -395,22 +432,9 @@
   }
 
   function setMood(moodKey) {
-    if (thinkTimer) { clearInterval(thinkTimer); thinkTimer = null; }
-    
     const mood = EMOTIONS[moodKey] || EMOTIONS.idle;
     avatar.className = "avatar " + mood.class;
-    
-    if (moodKey === "thinking") {
-      const frames = ["◔_◔", "◑_◑", "◕_◕", "○_○"];
-      let i = 0;
-      avatar.textContent = frames[0];
-      thinkTimer = setInterval(() => {
-        i = (i + 1) % frames.length;
-        avatar.textContent = frames[i];
-      }, 300);
-    } else {
-      avatar.textContent = mood.face;
-    }
+    if (statusEl) statusEl.textContent = mood.note;
     return mood.note;
   }
 
@@ -448,7 +472,7 @@
     if (role === "agent" && sideNoteText) {
       const sideNote = document.createElement("div");
       sideNote.className = "agent-sidenote";
-      sideNote.innerHTML = `<span>💬</span> <span>${escapeHtml(sideNoteText)}</span>`;
+      sideNote.textContent = sideNoteText;
       row.appendChild(sideNote);
     }
     
