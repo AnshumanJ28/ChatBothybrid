@@ -27,3 +27,4 @@ python-dotenv>=1.0
 
 # Optional Spell Checker
 # symspellpy>=6.7
+duckduckgo-search>=6.0
