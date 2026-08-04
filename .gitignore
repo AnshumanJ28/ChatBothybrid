@@ -1,0 +1,122 @@
+# ==========================
+# Python
+# ==========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python Packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# ==========================
+# C++ / CMake
+# ==========================
+build/
+bin/
+obj/
+out/
+Debug/
+Release/
+
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Makefile
+
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+*.exe
+*.out
+
+# ==========================
+# Visual Studio
+# ==========================
+.vs/
+*.VC.db
+*.VC.opendb
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ==========================
+# VS Code
+# ==========================
+.vscode/
+
+# Uncomment if you want to keep workspace settings
+# !.vscode/settings.json
+# !.vscode/extensions.json
+
+# ==========================
+# JetBrains (CLion/PyCharm)
+# ==========================
+.idea/
+*.iml
+
+# ==========================
+# macOS
+# ==========================
+.DS_Store
+
+# ==========================
+# Windows
+# ==========================
+Thumbs.db
+Desktop.ini
+
+# ==========================
+# Temporary Files
+# ==========================
+*.tmp
+*.temp
+*.cache
+.cache/
+
+# ==========================
+# Coverage & Testing
+# ==========================
+.coverage
+.pytest_cache/
+htmlcov/
+
+# ==========================
+# Model & Data (Optional)
+# Uncomment if needed
+# ==========================
+# models/
+# checkpoints/
+# data/
+# *.onnx
+# *.pt
+# *.pth
+# *.ckpt
+# *.bin
