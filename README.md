@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![pybind11](https://img.shields.io/badge/pybind11-Bindings-3fb950?style=for-the-badge)](https://pybind11.readthedocs.io)
 [![LLM](https://img.shields.io/badge/LLM-None-f85149?style=for-the-badge)](.)
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://chatbothybrid-1.onrender.com/)
+[![Live Demo](https://img.shields.io/badge/Demo-Suspended-8b949e?style=for-the-badge&logo=render&logoColor=white)](https://chatbothybrid-1.onrender.com/)
 [![License](https://img.shields.io/badge/License-Educational-d29922?style=for-the-badge)](.)
 
 <br/>
@@ -24,6 +24,9 @@ Every response is traceable, reproducible, and explainable. C++ handles the nume
 ---
 
 </div>
+
+> [!NOTE]
+> The live demo is currently suspended. Render's free tier provides 720 instance hours per month, and that allowance has been used up, so the service stays offline until it resets. The project runs fully locally; see the [Quick Start](#quick-start).
 
 ## Table of Contents
 
@@ -349,7 +352,7 @@ python orchestrator/server.py
 python orchestrator/main.py
 ```
 
-Then open [http://localhost:5000](http://localhost:5000) or visit the [live demo](https://chatbothybrid-1.onrender.com/).
+Then open [http://localhost:5000](http://localhost:5000).
 
 > [!TIP]
 > No API keys, no `.env` file, no cloud dependency. The chatbot works fully offline out of the box using its local knowledge base and deterministic encoder.
@@ -418,7 +421,7 @@ def encode(text):
 | **None** | Default | Falls back silently to offline KB |
 
 > [!WARNING]
-> **DuckDuckGo on cloud deployments:** DuckDuckGo search works locally but is **blocked on cloud platforms** (Render, Railway, Heroku) due to rate-limiting and IP-based restrictions. The [live demo](https://chatbothybrid-1.onrender.com/) runs without web search — all responses come from the local knowledge base and conversation engine. To experience web search, run the chatbot locally.
+> **DuckDuckGo on cloud deployments:** DuckDuckGo search works locally but is **blocked on cloud platforms** (Render, Railway, Heroku) due to rate-limiting and IP-based restrictions. The hosted demo (currently suspended, see the note at the top) ran without web search — all responses came from the local knowledge base and conversation engine. To experience web search, run the chatbot locally.
 
 ---
 
